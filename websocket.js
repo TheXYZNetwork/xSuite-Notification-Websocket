@@ -3,7 +3,7 @@ const websocket = require("ws");
 const mysql = require("mysql");
 const cache = new Map();
 
-let SECRET_KEY = ""
+let SECRET_KEY = "***REMOVED***";
 
 const httpsServer = https.createServer({});
 
@@ -38,26 +38,26 @@ function getCookie(cookie, cname) {
 };
 
 ws.on("connection", function(ws, request) {
-    if(request.headers.cookie && request.headers.cookie.includes(SECRET_KEY)) {
-        ws.on("message", message => {
-            message = message.split(",");
-            let userSocket = cache[message[0]];
-            if(userSocket && userSocket.readyState === websocket.OPEN) {
-                userSocket.send(message[1]);
-            };
-        });
-    } else {
-        let rawcookie = getCookie(request.headers.cookie, "xyz_session");
-        if(!request.headers.cookie) {
-            ws.close(); 
-            console.log(`No cookies from ${ws._socket.remoteAddress}`); 
-            return;
-        };
-
-        database.query(`SELECT * FROM sessions WHERE token="${rawcookie}"`, function (error, result, fields) {
-            if(error) return console.log(error);
-            if(!result) return console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
-            cache[result[0].userid] = ws;
-        });
+    let rawcookie = getCookie(request.headers.cookie, "xyz_session");
+    if(!rawcookie) {
+        ws.close(); 
+        console.log(`No cookies from ${ws._socket.remoteAddress}`); 
+        return;
     };
+
+    database.query(`SELECT * FROM sessions WHERE token="${rawcookie}"`, function (error, result, fields) {
+        if(error) return console.log(error);
+        if(!result) return console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
+        cache[result[0].userid] = ws;
+    });
+    
+    ws.on("message", message => {
+        message = message.split(",");
+        if(message[0] && message[0].trim() === SECRET_KEY) {
+            let userSocket = cache[message[1].trim()];
+            if(userSocket && userSocket.readyState === websocket.OPEN) {
+                userSocket.send(message[2].trim());
+            };
+        };
+    });
 });
