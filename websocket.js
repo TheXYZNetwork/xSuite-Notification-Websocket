@@ -37,29 +37,49 @@ function getCookie(cookie, cname) {
     return "";
 };
 
+function isJson(message){
+    try {
+        JSON.parse(message);
+        return true;
+    } catch(error) {
+        return false;
+    };
+};
 
 ws.on("connection", function(ws, request) {
-    let rawcookie = getCookie(request.headers.cookie, "xyz_session");
-    if(!rawcookie) {
-        ws.close(); 
-        console.log(`No cookies from ${ws._socket.remoteAddress}`); 
-        return;
-    };
-
-    if(rawcookie !== "server") {
-        database.query(`SELECT * FROM sessions WHERE token = ?`, [rawcookie], function (error, result, fields) {
-            if(error) return console.log(error);
-            if(!result) return console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
-            cache[result[0].userid] = ws;
-        });
-    };
-    
     ws.on("message", message => {
-        message = message.split(",");
-        if(message[0] && message[0].trim() === SECRET_KEY) {
-            let userSocket = cache[message[1].trim()];
+        if(!isJson(message)) {
+            ws.close();
+            console.log(`A user (${ws._socket.remoteAddress}) sent "${message}" which isn't a cookie, disallowing`);
+            return;
+        };
+        msg = JSON.parse(message);
+        if(msg.key && msg.key === SECRET_KEY) {
+            let userSocket = cache[msg.userid.trim()];
             if(userSocket && userSocket.readyState === websocket.OPEN) {
-                userSocket.send(message[2].trim());
+                userSocket.send(msg.message.trim());
+            };
+        } else {
+            let rawcookie = getCookie(msg.cookie, "xyz_session");
+            if(!rawcookie) {
+                ws.close(); 
+                console.log(`No cookies from ${ws._socket.remoteAddress}`); 
+                return;
+            };
+            if(rawcookie !== "server") {
+                database.query(`SELECT * FROM sessions WHERE token = ?`, [rawcookie], function (error, result, fields) {
+                    if(error) {
+                        ws.close();
+                        console.log(error);
+                        return;
+                    };
+                    if(!result) {
+                        ws.close();
+                        console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
+                        return;
+                    };
+                    cache[result[0].userid] = ws;
+                });
             };
         };
     });
