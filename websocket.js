@@ -48,6 +48,7 @@ function isJson(message){
 
 ws.on("connection", function(ws, request) {
     ws.on("message", message => {
+        if(message === "ping") return;
         if(!isJson(message)) {
             ws.close();
             console.log(`A user (${ws._socket.remoteAddress}) sent "${message}" which isn't a cookie, disallowing`);
