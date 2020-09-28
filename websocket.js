@@ -59,7 +59,7 @@ ws.on("connection", function(ws, request) {
     };
 
     if(!rawcookie === "server") {
-        database.query(`SELECT * FROM sessions WHERE token="${rawcookie}"`, function (error, result, fields) {
+        database.query(`SELECT * FROM sessions WHERE token = ?`, [rawcookie], function (error, result, fields) {
             if(error) return console.log(error);
             if(!result) return console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
             cache[result[0].userid] = ws;
