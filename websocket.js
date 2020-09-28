@@ -9,7 +9,7 @@ const httpsServer = https.createServer({});
 
 const ws = new websocket.Server({
     server: httpsServer,
-    port: 8881
+    port: 8880
 });
 
 let database = mysql.createPool({
