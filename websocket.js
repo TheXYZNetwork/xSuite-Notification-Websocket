@@ -37,20 +37,8 @@ function getCookie(cookie, cname) {
     return "";
 };
 
-function isJson(message){
-    try {
-        JSON.parse(message);
-        return true;
-    } catch(error) {
-        return false;
-    };
-};
 
 ws.on("connection", function(ws, request) {
-    if(!isJson(message)) { 
-        console.log(`A user (${ws._socket.remoteAddress}) sent "${message}" which isn't a cookie, disallowing`);
-        return;
-    };
     let rawcookie = getCookie(request.headers.cookie, "xyz_session");
     if(!rawcookie) {
         ws.close(); 
@@ -58,7 +46,7 @@ ws.on("connection", function(ws, request) {
         return;
     };
 
-    if(!rawcookie === "server") {
+    if(rawcookie !== "server") {
         database.query(`SELECT * FROM sessions WHERE token = ?`, [rawcookie], function (error, result, fields) {
             if(error) return console.log(error);
             if(!result) return console.log(`No session token found for ${ws._socket.remoteAddress} trying to use ${rawcookie}!`);
