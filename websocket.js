@@ -56,9 +56,9 @@ ws.on("connection", function(ws, request) {
         };
         msg = JSON.parse(message);
         if(msg.key && msg.key === SECRET_KEY) {
-            let userSocket = cache[msg.userid.trim()];
+            let userSocket = cache[msg.userid];
             if(userSocket && userSocket.readyState === websocket.OPEN) {
-                userSocket.send(msg.message.trim());
+                userSocket.send(msg.message);
             };
         } else {
             let rawcookie = getCookie(msg.cookie, "xyz_session");
