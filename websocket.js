@@ -3,7 +3,7 @@ const websocket = require("ws");
 const mysql = require("mysql");
 const cache = new Map();
 
-let SECRET_KEY = "***REMOVED***";
+let SECRET_KEY = "";
 
 const httpsServer = https.createServer({});
 
@@ -15,7 +15,7 @@ const ws = new websocket.Server({
 let database = mysql.createPool({
     host: "localhost",
     user: "site_xsuite",
-    password: "***REMOVED***",
+    password: "",
     database: "xsuite_master"
 });
 
